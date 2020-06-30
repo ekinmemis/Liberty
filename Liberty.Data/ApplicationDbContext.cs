@@ -22,7 +22,7 @@ namespace Liberty.Data
 {
     public class ApplicationDbContext : IdentityDbContext<User, Role, int, UserLogin, UserRole, UserClaim>
     {
-        private const string connectionString = "data source = pc\\sqlexpress;initial catalog = Liberty-Db; integrated security = True; MultipleActiveResultSets=True;App=EntityFramework";
+        private const string connectionString = "data source = pc\\sqlexpress;initial catalog = Liberty; integrated security = True; MultipleActiveResultSets=True;App=EntityFramework";
 
         public ApplicationDbContext() : base(connectionString) { }
 
