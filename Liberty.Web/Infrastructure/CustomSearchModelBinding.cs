@@ -1,0 +1,64 @@
+﻿using System;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace Liberty.Web.Infrastructure
+{
+    public class CustomSearchModelBinding : IModelBinder
+    {
+        public object BindModel(ControllerContext controllerContext, ModelBindingContext bindingContext)
+        {
+            try
+            {
+                Type listModelType = Type.GetType(bindingContext.ModelType.FullName);
+
+                var model = Activator.CreateInstance(listModelType);
+
+                var searchValue = HttpContext.Current.Request.Form.GetValues("search[value]");
+                var draw = HttpContext.Current.Request.Form.GetValues("draw").FirstOrDefault();
+                var start = HttpContext.Current.Request.Form.GetValues("start").FirstOrDefault();
+                var length = HttpContext.Current.Request.Form.GetValues("length").FirstOrDefault();
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int pageIndex = start != null ? Convert.ToInt32(start) : 0;
+                var sortColumn = HttpContext.Current.Request.Form.GetValues("columns[" + HttpContext.Current.Request.Form.GetValues("order[0][column]").FirstOrDefault() + "][name]").FirstOrDefault();
+                var sortColumnDir = HttpContext.Current.Request.Form.GetValues("order[0][dir]").FirstOrDefault();
+
+                model.GetType().GetProperty("Draw").SetValue(model, draw);
+                model.GetType().GetProperty("PageSize").SetValue(model, pageSize);
+                model.GetType().GetProperty("PageIndex").SetValue(model, pageIndex);
+
+                if (!string.IsNullOrEmpty(searchValue[0]))
+                {
+                    var searchValues = searchValue[0].Split(',');
+
+                    foreach (var searchItem in searchValues)
+                    {
+                        var searchValueItem = searchItem.Split(':');
+                        model.GetType().GetProperty(searchValueItem[0]).SetValue(model, searchValueItem[1]);
+                    }
+                }
+
+                return model;
+            }
+            catch (Exception)
+            {
+                bindingContext.ModelState.AddModelError("Error", "Received Model cannot be serialized");
+
+                return null;
+            }
+        }
+
+
+        public class DataTablesToObjectModelBinderProvider : IModelBinderProvider
+        {
+            public IModelBinder GetBinder(Type modelType)
+            {
+                if (HttpContext.Current.Request.RequestType == "POST" && modelType.Name.Contains("ListModel"))
+                    return new CustomSearchModelBinding();
+
+                return null;
+            }
+        }
+    }
+}
