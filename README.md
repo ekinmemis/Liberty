@@ -1,5 +1,6 @@
 # Liberty
-These may be useful
+
+references:
 
 https://github.com/nopSolutions/nopCommerce
 
